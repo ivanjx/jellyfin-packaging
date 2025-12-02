@@ -1,0 +1,36 @@
+name: cicd
+
+on:
+  push:
+    branches:
+      - mine
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m venv .env
+        ./.env/bin/pip install -r requirements.txt
+
+    - name: Build Docker image
+      run: |
+        ./.env/bin/python3 build.py mine docker amd64 --local
+
+    - name: Tag and push to GHCR
+      run: |
+        docker tag jellyfin/jellyfin:mine-amd64 ghcr.io/ivanjx/jellyfin-packaging:mine
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        docker push ghcr.io/ivanjx/jellyfin-packaging:mine
