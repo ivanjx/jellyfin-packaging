@@ -32,8 +32,14 @@ jobs:
       run: |
         ./.env/bin/python3 build.py mine docker amd64 --local
 
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Tag and push to GHCR
       run: |
         docker tag jellyfin/jellyfin:mine-amd64 ghcr.io/ivanjx/jellyfin-packaging:mine
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         docker push ghcr.io/ivanjx/jellyfin-packaging:mine
